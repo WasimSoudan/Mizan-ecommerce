@@ -57,6 +57,14 @@ export const copy = {
     statOut: "Out of stock",
     overviewBody:
       "Add categories and products here. Turning an item off keeps it in the database and hides it from the shop.",
+    chatOpen: "Start a conversation",
+    chatTitle: "Ask about a product",
+    chatGreeting: "Ask a question about a product in the shop.",
+    chatPlaceholder: "What would you like to know?",
+    chatSend: "Send",
+    chatClose: "Close",
+    chatThinking: "Looking through the shop…",
+    chatFailed: "The assistant could not answer. Try again.",
   },
   ar: {
     brand: "ميزان",
@@ -115,6 +123,14 @@ export const copy = {
     statOut: "نفدت كميته",
     overviewBody:
       "أضف التصنيفات والمنتجات من هنا. إخفاء عنصر يبقيه في قاعدة البيانات ويزيله من المتجر.",
+    chatOpen: "ابدأ المحادثة",
+    chatTitle: "اسأل عن منتج",
+    chatGreeting: "اسأل سؤالاً عن منتج في المتجر.",
+    chatPlaceholder: "ماذا تريد أن تعرف؟",
+    chatSend: "إرسال",
+    chatClose: "إغلاق",
+    chatThinking: "أبحث في المتجر…",
+    chatFailed: "تعذر الحصول على إجابة. حاول مرة أخرى.",
   },
 } as const;
 

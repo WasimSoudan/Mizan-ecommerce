@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Catalog } from "@/components/catalog";
+import { ChatLauncher } from "@/components/chat-launcher";
 import { assertLocale } from "@/lib/locale";
 
 export default function Home({
@@ -24,7 +25,12 @@ async function HomeCatalog({
   searchParams: Promise<{ category?: string; q?: string }>;
 }) {
   const locale = assertLocale((await params).locale);
-  return <Catalog locale={locale} searchParams={searchParams} />;
+  return (
+    <>
+      <Catalog locale={locale} searchParams={searchParams} />
+      <ChatLauncher locale={locale} />
+    </>
+  );
 }
 
 function CatalogFallback() {

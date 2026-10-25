@@ -145,6 +145,121 @@ export async function updateProduct(id: number, input: ProductInput) {
   return rows[0] ?? null;
 }
 
+export type ChatCatalogProduct = {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  description_en: string | null;
+  description_ar: string | null;
+  category_en: string;
+  category_ar: string;
+  price: string;
+  stock: number;
+};
+
+const chatProductColumns = `
+  p.id,
+  p.name_en,
+  p.name_ar,
+  p.description_en,
+  p.description_ar,
+  c.name_en AS category_en,
+  c.name_ar AS category_ar,
+  p.price::text AS price,
+  p.stock_quantity AS stock
+`;
+
+const visibleProductWhere = "p.is_active = TRUE AND c.is_active = TRUE";
+
+const ignoredQuestionWords = new Set([
+  "the",
+  "and",
+  "for",
+  "are",
+  "you",
+  "your",
+  "what",
+  "how",
+  "much",
+  "does",
+  "have",
+  "with",
+  "about",
+  "this",
+  "that",
+  "price",
+  "stock",
+  "please",
+  "tell",
+  "from",
+  "can",
+  "ما",
+  "هل",
+  "كم",
+  "في",
+  "من",
+  "عن",
+  "هذا",
+  "هذه",
+  "سعر",
+  "السعر",
+]);
+
+function questionTokens(question: string) {
+  return [
+    ...new Set(
+      question
+        .toLocaleLowerCase()
+        .split(/[^\p{L}\p{N}]+/u)
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 3 && !ignoredQuestionWords.has(token)),
+    ),
+  ].slice(0, 6);
+}
+
+function likeParam(token: string) {
+  return `%${token.replace(/[\\%_]/g, "\\$&")}%`;
+}
+
+export async function listProductsForChat(question: string) {
+  const tokens = questionTokens(question);
+
+  if (tokens.length > 0) {
+    const params: unknown[] = [];
+    const clauses = tokens.map((token) => {
+      params.push(likeParam(token));
+      const placeholder = `$${params.length}`;
+      return `(p.name_en ILIKE ${placeholder} ESCAPE '\\'
+        OR p.name_ar ILIKE ${placeholder} ESCAPE '\\'
+        OR COALESCE(p.description_en, '') ILIKE ${placeholder} ESCAPE '\\'
+        OR COALESCE(p.description_ar, '') ILIKE ${placeholder} ESCAPE '\\'
+        OR c.name_en ILIKE ${placeholder} ESCAPE '\\'
+        OR c.name_ar ILIKE ${placeholder} ESCAPE '\\')`;
+    });
+
+    const matches = await query<ChatCatalogProduct>(
+      `SELECT ${chatProductColumns}
+       FROM products p
+       JOIN categories c ON c.id = p.category_id
+       WHERE ${visibleProductWhere}
+         AND (${clauses.join(" OR ")})
+       ORDER BY p.created_at DESC, p.id DESC
+       LIMIT 20`,
+      params,
+    );
+    if (matches.length > 0) return matches;
+  }
+
+  return query<ChatCatalogProduct>(
+    `SELECT ${chatProductColumns}
+     FROM products p
+     JOIN categories c ON c.id = p.category_id
+     WHERE ${visibleProductWhere}
+     ORDER BY p.created_at DESC, p.id DESC
+     LIMIT 20`,
+  );
+}
+
 export async function getDashboardStats() {
   const rows = await query<DashboardStats>(
     `SELECT
